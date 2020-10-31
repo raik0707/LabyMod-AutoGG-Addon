@@ -1,0 +1,10 @@
+{
+    "uuid": "%uuid%",
+    "name": "AutoGG",
+    "mainClass": "de.raik.autogg.AutoGGAddon",
+    "description": "Addon automatically says a selected phrase at the end of the game on certain servers. Ported from Sk1er's AutoGG",
+    "version": 1,
+    "author": "MineFlash07 (& Sk1er)",
+    "category": 2,
+    "icon": "https://mineflash07.github.io/images/addons/autogg.png"
+}
