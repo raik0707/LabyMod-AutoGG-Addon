@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.raik.autogg.settingelements.DescribedBooleanElement;
 import de.raik.autogg.settingelements.MessageDelayElement;
 import de.raik.autogg.settingelements.MessageDropdownElement;
+import de.raik.autogg.settingelements.messages.AdditionalMessage;
 import de.raik.autogg.settingelements.messages.GameEndMessage;
 import net.labymod.api.LabyModAddon;
 import net.labymod.settings.Settings;
@@ -62,6 +63,17 @@ public class AutoGGAddon extends LabyModAddon {
     private boolean secondMessage = false;
 
     /**
+     * The delay after first message to send
+     * second message
+     */
+    private int secondMessageDelay = 1000;
+
+    /**
+     * The second message
+     */
+    private AdditionalMessage additionalMessage = AdditionalMessage.HEART;
+
+    /**
      * Init method called by
      * the addon api to setup the addon
      */
@@ -91,7 +103,17 @@ public class AutoGGAddon extends LabyModAddon {
 
         this.secondMessage = addonConfig.has("secondmessage") ? addonConfig.get("secondmessage").getAsBoolean() : this.secondMessage;
 
-        //
+        //Second message
+        if (!addonConfig.has("secondmessagesettings"))
+            addonConfig.add("secondmessagesettings", new JsonObject());
+
+        JsonObject secondMessageOptions = addonConfig.getAsJsonObject("secondmessagesettings");
+        this.secondMessageDelay = secondMessageOptions.has("messagedelay") ? secondMessageOptions.get("messagedelay").getAsInt() : this.secondMessageDelay;
+        //Try catch to check the enum again
+        try {
+            this.additionalMessage = secondMessageOptions.has("message") ?
+                    AdditionalMessage.valueOf(secondMessageOptions.get("message").getAsString()) : this.additionalMessage;
+        } catch (IllegalArgumentException ignored) {}
     }
 
     /**
@@ -143,7 +165,9 @@ public class AutoGGAddon extends LabyModAddon {
      * @param subSettings The settings to fill
      */
     private void fillSecondMessageSettings(Settings subSettings) {
-
+        JsonObject config = this.getConfig().getAsJsonObject("secondmessagesettings");
+        subSettings.add(new MessageDelayElement(this, config, this.secondMessageDelay));
+        subSettings.add(new MessageDropdownElement<>(this, config, AdditionalMessage.createDropDownMenu(this.additionalMessage)));
     }
 
     public boolean isEnabled() {

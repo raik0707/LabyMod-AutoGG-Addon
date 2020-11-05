@@ -42,6 +42,7 @@ public class MessageDelayElement extends SliderElement {
         this.addCallback(sliderValue -> {
             configElement.addProperty(ATTRIBUTE_NAME, sliderValue);
             addon.saveConfig();
+            addon.loadConfig();
         });
     }
 
