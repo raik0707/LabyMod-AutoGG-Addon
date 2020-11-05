@@ -1,5 +1,8 @@
 package de.raik.autogg.settingelements.messages;
 
+import net.labymod.gui.elements.DropDownMenu;
+import net.labymod.main.LabyMod;
+
 /**
  * Enum that contains the gg messags
  *
@@ -23,5 +26,15 @@ public enum GameEndMessage {
 
     public String getMessage() {
         return message;
+    }
+
+    public static DropDownMenu<GameEndMessage> createDropDownMenu(GameEndMessage currentValue) {
+        DropDownMenu<GameEndMessage> dropDownMenu = new DropDownMenu<GameEndMessage>(null, 0, 0, 0, 0)
+                .fill(values());
+        dropDownMenu.setSelected(currentValue);
+        dropDownMenu.setEntryDrawer((entry, x, y, trimmed) ->
+            LabyMod.getInstance().getDrawUtils().drawString(((GameEndMessage)entry).getMessage(), x ,y));
+
+        return dropDownMenu;
     }
 }

@@ -3,6 +3,8 @@ package de.raik.autogg;
 import com.google.gson.JsonObject;
 import de.raik.autogg.settingelements.DescribedBooleanElement;
 import de.raik.autogg.settingelements.MessageDelayElement;
+import de.raik.autogg.settingelements.MessageDropdownElement;
+import de.raik.autogg.settingelements.messages.GameEndMessage;
 import net.labymod.api.LabyModAddon;
 import net.labymod.settings.Settings;
 import net.labymod.settings.elements.BooleanElement;
@@ -49,6 +51,11 @@ public class AutoGGAddon extends LabyModAddon {
     private int messageDelay = 1000;
 
     /**
+     * The message send at the end of the game
+     */
+    private GameEndMessage gameEndMessage = GameEndMessage.GG_UPPER;
+
+    /**
      * If true a second message will be
      * sent after first message
      */
@@ -76,7 +83,15 @@ public class AutoGGAddon extends LabyModAddon {
         this.antiGG = addonConfig.has("antigg") ? addonConfig.get("antigg").getAsBoolean() : this.antiGG;
         this.antiKarma = addonConfig.has("antikarma") ? addonConfig.get("antikarma").getAsBoolean() : this.antiKarma;
         this.messageDelay = addonConfig.has("messagedelay") ? addonConfig.get("messagedelay").getAsInt() : this.messageDelay;
+
+        //Try catch for Enum valuing
+        try {
+            this.gameEndMessage = addonConfig.has("message") ? GameEndMessage.valueOf(addonConfig.get("message").getAsString()) : this.gameEndMessage;
+        } catch (IllegalArgumentException ignored) {}
+
         this.secondMessage = addonConfig.has("secondmessage") ? addonConfig.get("secondmessage").getAsBoolean() : this.secondMessage;
+
+        //
     }
 
     /**
@@ -97,6 +112,12 @@ public class AutoGGAddon extends LabyModAddon {
         settings.add(new DescribedBooleanElement("Casual AutoGG", this, new ControlElement.IconData(Material.MAP)
                 , "casualGG", this.casualAutoGG, "AutoGG for non Karma events.", "Such as SkyBlock Events."));
 
+        //Delay Element because of description. Addon config because of delay for first message
+        settings.add(new MessageDelayElement(this, this.getConfig(), this.messageDelay));
+
+        //Dropdown element with description and dynamic addon config
+        settings.add(new MessageDropdownElement<>(this, this.getConfig(), GameEndMessage.createDropDownMenu(this.gameEndMessage)));
+
         //Second message
         settings.add(new HeaderElement(ModColor.cl('6') + "Second message"));
 
@@ -106,9 +127,6 @@ public class AutoGGAddon extends LabyModAddon {
                 , "Sends a second message in the chat", "after the first message.");
         this.fillSecondMessageSettings(secondChatElement.getSubSettings());
         settings.add(secondChatElement);
-
-        //Delay Element because of description. Addon config because of delay for first message
-        settings.add(new MessageDelayElement(this, this.getConfig(), this.messageDelay));
 
         //Anti Category
         settings.add(new HeaderElement(ModColor.cl("cl") + "Hidden Message"));
