@@ -1,6 +1,7 @@
 package de.raik.autogg;
 
 import com.google.gson.JsonObject;
+import de.raik.autogg.settingelements.ButtonElement;
 import de.raik.autogg.settingelements.DescribedBooleanElement;
 import de.raik.autogg.settingelements.MessageDelayElement;
 import de.raik.autogg.settingelements.MessageDropdownElement;
@@ -16,6 +17,8 @@ import net.labymod.utils.Material;
 import net.labymod.utils.ModColor;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Addon class
@@ -74,6 +77,11 @@ public class AutoGGAddon extends LabyModAddon {
     private AdditionalMessage additionalMessage = AdditionalMessage.HEART;
 
     /**
+     * ExecutorService for handeling
+     */
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+    /**
      * Init method called by
      * the addon api to setup the addon
      */
@@ -124,6 +132,16 @@ public class AutoGGAddon extends LabyModAddon {
      */
     @Override
     protected void fillSettings(List<SettingsElement> settings) {
+        //Button element to refresh regex
+        settings.add(new ButtonElement("Refresh Cache"
+                , new ControlElement.IconData("labymod/textures/settings/settings/serverlistliveview")
+                , buttonElement -> executorService.execute(() -> {
+                    buttonElement.setEnabled(false);
+                    this.loadRegex();
+                    buttonElement.setEnabled(true);
+            }), "Refresh", "Reloads the triggers to send the gg", "Clears Cache before"));
+
+        //Begin of settings
         settings.add(new HeaderElement(ModColor.cl('l') + "General"));
 
         //Adding settings element for enabled which default callback to change the config
@@ -168,6 +186,13 @@ public class AutoGGAddon extends LabyModAddon {
         JsonObject config = this.getConfig().getAsJsonObject("secondmessagesettings");
         subSettings.add(new MessageDelayElement(this, config, this.secondMessageDelay));
         subSettings.add(new MessageDropdownElement<>(this, config, AdditionalMessage.createDropDownMenu(this.additionalMessage)));
+    }
+
+    /**
+     * Download regex from Sk1er for handling gg
+     */
+    private void loadRegex() {
+
     }
 
     public boolean isEnabled() {

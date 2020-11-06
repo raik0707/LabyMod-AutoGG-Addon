@@ -58,6 +58,7 @@ public class MessageDropdownElement<T extends Enum<T>> extends DropDownElement<T
         //Calling super that the element will draw
         super.draw(x, y, maxX, maxY, mouseX, mouseY);
 
-        LabyMod.getInstance().getDrawUtils().drawHoveringText(mouseX, mouseY, DESCRIPTION_LINES);
+        if (mouseX > (x + 255) && mouseX < (maxX + 35) && mouseY > y && mouseY < maxY)
+            LabyMod.getInstance().getDrawUtils().drawHoveringText(mouseX, mouseY, DESCRIPTION_LINES);
     }
 }

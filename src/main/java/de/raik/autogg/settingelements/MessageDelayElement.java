@@ -61,6 +61,7 @@ public class MessageDelayElement extends SliderElement {
         //Calling super that the element will still be drawn
         super.draw(x, y, maxX, maxY, mouseX, mouseY);
 
-        LabyMod.getInstance().getDrawUtils().drawHoveringText(mouseX, mouseY, DESCRIPTION_LINES);
+        if (mouseX > (x + 255) && mouseX < (maxX + 35) && mouseY > y && mouseY < maxY)
+            LabyMod.getInstance().getDrawUtils().drawHoveringText(mouseX, mouseY, DESCRIPTION_LINES);
     }
 }
