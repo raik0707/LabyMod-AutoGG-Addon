@@ -18,8 +18,6 @@ import java.awt.*;
  */
 public class ButtonElement extends ControlElement {
 
-    private final String[] descriptionLines;
-
     /**
      * The runnable which will be called when the button is clicked
      * which element callback to
@@ -41,11 +39,12 @@ public class ButtonElement extends ControlElement {
      * @param buttonText The text of the button
      * @param description The module description
      */
-    public ButtonElement(String displayName, IconData iconData, Consumer<ButtonElement> buttonListener, String buttonText, String... description) {
+    public ButtonElement(String displayName, IconData iconData, Consumer<ButtonElement> buttonListener, String buttonText, String description) {
         super(displayName, iconData);
 
+        this.setDescriptionText(description);
+
         this.buttonListener = buttonListener;
-        this.descriptionLines = description;
         this.button = new GuiButton(-10, 0, 0, 0, 20, buttonText);
     }
 
@@ -66,7 +65,7 @@ public class ButtonElement extends ControlElement {
     }
 
     /**
-     * Added button and description drawing
+     * Added button drawing
      * for module
      * calling super
      *
@@ -92,10 +91,6 @@ public class ButtonElement extends ControlElement {
         LabyModCore.getMinecraft().setButtonYPosition(this.button, y + 1);
 
         LabyModCore.getMinecraft().drawButton(this.button, mouseX, mouseY);
-
-        //Drawing description
-        if (mouseX > (x + 255) && mouseX < (maxX + 35) && mouseY > y && mouseY < maxY)
-            LabyMod.getInstance().getDrawUtils().drawHoveringText(mouseX, mouseY, this.descriptionLines);
     }
 
     /**

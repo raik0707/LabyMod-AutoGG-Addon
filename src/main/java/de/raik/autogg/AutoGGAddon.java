@@ -134,12 +134,12 @@ public class AutoGGAddon extends LabyModAddon {
     protected void fillSettings(List<SettingsElement> settings) {
         //Button element to refresh regex
         settings.add(new ButtonElement("Refresh Cache"
-                , new ControlElement.IconData("labymod/textures/settings/settings/serverlistliveview")
+                , new ControlElement.IconData("labymod/textures/settings/settings/serverlistliveview.png")
                 , buttonElement -> executorService.execute(() -> {
                     buttonElement.setEnabled(false);
                     this.loadRegex();
                     buttonElement.setEnabled(true);
-            }), "Refresh", "Reloads the triggers to send the gg", "Clears Cache before"));
+            }), "Refresh", "Reloads the triggers to send the gg. Clears Cache before."));
 
         //Begin of settings
         settings.add(new HeaderElement(ModColor.cl('l') + "General"));
@@ -150,7 +150,7 @@ public class AutoGGAddon extends LabyModAddon {
 
         //Adding described setting element because of complex settings
         settings.add(new DescribedBooleanElement("Casual AutoGG", this, new ControlElement.IconData(Material.MAP)
-                , "casualGG", this.casualAutoGG, "AutoGG for non Karma events.", "Such as SkyBlock Events."));
+                , "casualGG", this.casualAutoGG, "AutoGG for non Karma events. Such as SkyBlock Events."));
 
         //Delay Element because of description. Addon config because of delay for first message
         settings.add(new MessageDelayElement(this, this.getConfig(), this.messageDelay));
@@ -164,12 +164,12 @@ public class AutoGGAddon extends LabyModAddon {
         //Described Boolean element with sub setting loading and description
         DescribedBooleanElement secondChatElement = new DescribedBooleanElement("Second message", this,
                 new ControlElement.IconData("labymod/textures/settings/category/addons.png"), "secondmessage", this.secondMessage
-                , "Sends a second message in the chat", "after the first message.");
+                , "Sends a second message in the chat after the first message.");
         this.fillSecondMessageSettings(secondChatElement.getSubSettings());
         settings.add(secondChatElement);
 
         //Anti Category
-        settings.add(new HeaderElement(ModColor.cl("cl") + "Hidden Message"));
+        settings.add(new HeaderElement(ModColor.cl("c") + ModColor.cl("l") + "Hidden Messages"));
         //Elements with config setting
         settings.add(new BooleanElement("Hide GG messages", this, new ControlElement.IconData(Material.BARRIER)
                 , "antigg", this.antiGG));

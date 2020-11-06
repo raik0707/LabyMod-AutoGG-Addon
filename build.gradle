@@ -34,7 +34,8 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
-dependencies {
-    compileOnly files('libs/lm_api_mc1.8.9.jar')
+reobf {
+    jar {
+        useNotchSrg()
+    }
 }
-
