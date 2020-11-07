@@ -1,5 +1,6 @@
 package de.raik.autogg;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.raik.autogg.settingelements.ButtonElement;
 import de.raik.autogg.settingelements.DescribedBooleanElement;
@@ -13,12 +14,22 @@ import net.labymod.settings.elements.BooleanElement;
 import net.labymod.settings.elements.ControlElement;
 import net.labymod.settings.elements.HeaderElement;
 import net.labymod.settings.elements.SettingsElement;
+import net.labymod.utils.JsonParse;
 import net.labymod.utils.Material;
 import net.labymod.utils.ModColor;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 /**
  * Addon class
@@ -79,7 +90,7 @@ public class AutoGGAddon extends LabyModAddon {
     /**
      * ExecutorService for handeling
      */
-    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     /**
      * Init method called by
@@ -87,8 +98,36 @@ public class AutoGGAddon extends LabyModAddon {
      */
     @Override
     public void onEnable() {
+        //Loading regex
+        this.executorService.execute(this::loadRegex);
 
+        //Shutdown executor service on shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(this.executorService::shutdown));
     }
+
+    /**
+     * The gg triggers
+     *
+     * First pattern for the server
+     * HashMap containing triggers
+     * Trigger type to differentiate triggers
+     * ArrayList Containing pattern
+     */
+    private HashMap<Pattern, HashMap<TriggerType, HashSet<Pattern>>> triggers = new HashMap<>();
+
+    /**
+     * AntiGG and AntiKarma triggers
+     *
+     * First pattern for server
+     * HashMap containing the pattern
+     * depending on trigger type
+     */
+    private HashMap<Pattern, HashMap<TriggerType, Pattern>> antiTriggers = new HashMap<>();
+
+    /**
+     * Containing the string to add before the message on the different servers.
+     */
+    private HashMap<Pattern, String> messageAdditions = new HashMap<>();
 
     /**
      * Method called by the addon api
@@ -192,7 +231,120 @@ public class AutoGGAddon extends LabyModAddon {
      * Download regex from Sk1er for handling gg
      */
     private void loadRegex() {
+        JsonObject requestResult = this.downloadTriggerJson();
 
+        //Breaking when error in fetching
+        if (requestResult == null) {
+            this.getApi().displayMessageInChat(ModColor.cl('c') + "Error while fetching AutoGG data.");
+            return;
+        }
+
+        this.triggers.clear();
+        this.antiTriggers.clear();
+        this.messageAdditions.clear();
+
+        for (Map.Entry<String, JsonElement> entry: requestResult.entrySet()) {
+            //General for every trigger
+            Pattern serverPattern = Pattern.compile(entry.getKey().replaceAll("\\\\{2}", "\\\\"));
+
+            HashMap<TriggerType, HashSet<Pattern>> serverTriggers = new HashMap<>();
+            JsonObject triggerObject = (JsonObject) entry.getValue();
+
+            //Adding gg triggers
+            JsonObject ggTriggerObject = triggerObject.getAsJsonObject("gg_triggers");
+
+            HashSet<Pattern> normalTriggers = new HashSet<>();
+            for (JsonElement triggerEntry: ggTriggerObject.getAsJsonArray("triggers")) {
+                normalTriggers.add(Pattern.compile(triggerEntry.getAsString().replaceAll("\\\\{2}", "\\\\")));
+            }
+            serverTriggers.put(TriggerType.NORMAL, normalTriggers);
+
+            HashSet<Pattern> casualTriggers = new HashSet<>();
+            for (JsonElement triggerEntry: ggTriggerObject.getAsJsonArray("casual_triggers")) {
+                casualTriggers.add(Pattern.compile(triggerEntry.getAsString().replaceAll("\\\\{2}", "\\\\")));
+            }
+            serverTriggers.put(TriggerType.CASUAL, casualTriggers);
+
+            this.triggers.put(serverPattern , serverTriggers);
+
+            //Adding anti Triggers
+            JsonObject antiObject = triggerObject.getAsJsonObject("other_patterns");
+
+            HashMap<TriggerType, Pattern> antiTriggers = new HashMap<>();
+            antiTriggers.put(TriggerType.ANTI_GG, Pattern.compile(reformatAntiString(antiObject.get("antigg")
+                    .getAsString()).replaceAll("(?<!\\\\)\\$\\{antigg_strings}", String.join("|", this.getAntiTriggers()))));
+            antiTriggers.put(TriggerType.ANTI_KARMA, Pattern.compile(reformatAntiString(antiObject.get("anti_karma").getAsString())));
+
+            this.antiTriggers.put(serverPattern, antiTriggers);
+
+            //Adding additional message
+            this.messageAdditions.put(serverPattern, triggerObject.getAsJsonObject("other").get("msg").getAsString());
+        }
+    }
+
+    /**
+     * Reformatting the strings of the anti pattern
+     *
+     * @param stringToReformat The string to reformat
+     * @return The formatted string
+     */
+    private String reformatAntiString(String stringToReformat) {
+        return stringToReformat.substring(1, stringToReformat.length() - 1).replace("\\\\{2}", "\\\\");
+    }
+
+    /**
+     * Merge both message types to get messages
+     * that should be hidden
+     *
+     * @return The merged array
+     */
+    private String[] getAntiTriggers() {
+        HashSet<String> messages = new HashSet<>();
+
+        for (GameEndMessage gameEndTrigger: GameEndMessage.values()) {
+            messages.add(gameEndTrigger.getMessage());
+        }
+        for (AdditionalMessage additionalTrigger: AdditionalMessage.values()) {
+            messages.add(additionalTrigger.getMessage());
+        }
+
+        return (String[]) messages.toArray();
+    }
+
+    /**
+     * Downloading the json form Sk1ers Website
+     *
+     * @return The json object got from the request
+     */
+    private JsonObject downloadTriggerJson() {
+        JsonObject requestResult;
+
+        try {
+            //Http Request
+            HttpURLConnection connection = (HttpURLConnection) new URL("https://static.sk1er.club/autogg/regex_triggers_new.json").openConnection();
+            connection.addRequestProperty("User-Agent", "java 8 HttpURLConnection (LabyMod AutoGG Addon by MineFlash07)");
+            connection.setConnectTimeout(20000);
+            connection.setReadTimeout(20000);
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+            connection.setRequestMethod("GET");
+
+            StringBuilder resultBuilder = new StringBuilder();
+
+            //Transform to string
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    resultBuilder.append(line);
+                }
+            }
+
+            requestResult = (JsonObject) JsonParse.parse(resultBuilder.toString());
+        } catch (IOException | ClassCastException exception) {
+            return null;
+        }
+
+        return requestResult.getAsJsonObject("servers");
     }
 
     public boolean isEnabled() {
@@ -213,5 +365,16 @@ public class AutoGGAddon extends LabyModAddon {
 
     public boolean isSecondMessage() {
         return this.secondMessage;
+    }
+
+    /**
+     * Enum to differentiate patterns
+     * Enum contains Types
+     */
+    private enum TriggerType {
+        NORMAL,
+        CASUAL,
+        ANTI_GG,
+        ANTI_KARMA
     }
 }

@@ -12,7 +12,8 @@ import net.labymod.main.LabyMod;
 public enum AdditionalMessage {
     GOOD_DAY("Have a good day!"),
     HEART("<3"),
-    LM_CREDIT("AutoGG for LabyMod");
+    LM_CREDIT("AutoGG for LabyMod"),
+    SK1ER_CREDIT("AutoGG By Sk1er!");
 
 
     private final String message;
