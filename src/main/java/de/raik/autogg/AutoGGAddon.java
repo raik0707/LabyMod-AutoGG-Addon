@@ -2,6 +2,7 @@ package de.raik.autogg;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.raik.autogg.listener.AutoGGTriggerListener;
 import de.raik.autogg.settingelements.ButtonElement;
 import de.raik.autogg.settingelements.DescribedBooleanElement;
 import de.raik.autogg.settingelements.MessageDelayElement;
@@ -17,16 +18,14 @@ import net.labymod.settings.elements.SettingsElement;
 import net.labymod.utils.JsonParse;
 import net.labymod.utils.Material;
 import net.labymod.utils.ModColor;
+import net.labymod.utils.ServerData;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -103,6 +102,12 @@ public class AutoGGAddon extends LabyModAddon {
 
         //Shutdown executor service on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(this.executorService::shutdown));
+
+        //Registering switching events
+        this.getApi().getEventManager().registerOnJoin(this::updateServer);
+        this.getApi().getEventManager().registerOnQuit(serverData -> this.updateServer(null));
+
+        this.getApi().getEventManager().register(new AutoGGTriggerListener(this));
     }
 
     /**
@@ -128,6 +133,12 @@ public class AutoGGAddon extends LabyModAddon {
      * Containing the string to add before the message on the different servers.
      */
     private HashMap<Pattern, String> messageAdditions = new HashMap<>();
+
+    /**
+     * The pattern of the current server
+     * to handle the pattern matching
+     */
+    private Pattern currentServerPattern;
 
     /**
      * Method called by the addon api
@@ -368,10 +379,63 @@ public class AutoGGAddon extends LabyModAddon {
     }
 
     /**
+     * Updating pattern variable
+     * to set serverdata
+     *
+     * @param serverData The server data to check
+     */
+    public void updateServer(ServerData serverData) {
+        //Resetting on leave
+        if (serverData == null) {
+            this.currentServerPattern = null;
+            return;
+        }
+        String serverIP = serverData.getIp().replaceAll("^(.*):\\d{1,5}$", "$1").toLowerCase(Locale.ENGLISH);
+
+        //Setting pattern if it matches
+        for (Pattern keyPattern: this.triggers.keySet()) {
+            if (keyPattern.matcher(serverIP).matches()) {
+                this.currentServerPattern = keyPattern;
+                return;
+            }
+        }
+
+        //Resetting if nothing matches
+        this.currentServerPattern = null;
+    }
+
+    /**
+     * Get if the message
+     * is a anti message
+     *
+     * @param message The message to check
+     * @param antiType The type of the anti message
+     * @return The result
+     */
+    public boolean matchAnti(String message, TriggerType antiType) {
+        return (antiType == TriggerType.ANTI_KARMA ? this.antiKarma : this.antiGG)
+                && this.antiTriggers.get(this.currentServerPattern).get(antiType).matcher(message).matches();
+    }
+
+    /**
+     * Check if message matches casual triggers
+     *
+     * @param message The message to check
+     * @return The result
+     */
+    public boolean matchCasual(String message) {
+        for (Pattern casualPattern: this.triggers.get(this.currentServerPattern).get(TriggerType.CASUAL)) {
+            if (casualPattern.matcher(message).matches())
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * Enum to differentiate patterns
      * Enum contains Types
      */
-    private enum TriggerType {
+    public enum TriggerType {
         NORMAL,
         CASUAL,
         ANTI_GG,
