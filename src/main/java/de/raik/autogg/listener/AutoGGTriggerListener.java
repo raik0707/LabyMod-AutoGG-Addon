@@ -2,6 +2,11 @@ package de.raik.autogg.listener;
 
 import de.raik.autogg.AutoGGAddon;
 import net.labymod.api.events.MessageReceiveEvent;
+import net.minecraft.client.Minecraft;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Trigger listener to handle the auto gg messages
@@ -31,6 +36,17 @@ public class AutoGGTriggerListener implements MessageReceiveEvent {
     }
 
     /**
+     * Executor service for executing the message async
+     * scheduled because of message delay
+     */
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(5);
+
+    /**
+     * Minecraft instance to access the player entity
+     */
+    private final Minecraft minecraft = Minecraft.getMinecraft();
+
+    /**
      * The method called by the api
      * to handle incoming chat messages
      *
@@ -51,11 +67,40 @@ public class AutoGGTriggerListener implements MessageReceiveEvent {
             return false;
 
         if (this.addon.isCasualAutoGG() && this.addon.matchCasual(unformattedText)) {
-
+            this.sendGGMessage(true);
+            return false;
         }
 
-        
+        if (this.addon.isEnabled() && this.addon.match(unformattedText))
+            this.sendGGMessage(false);
 
         return false;
+    }
+
+    /**
+     * Send the gg message
+     *
+     * @param casual If the message is triggered by a casual trigger
+     */
+    private void sendGGMessage(boolean casual) {
+        this.invokedGG = true;
+        this.executorService.schedule(() -> {
+            String messageAddition = this.addon.getMessageAddition();
+
+            this.minecraft.thePlayer.sendChatMessage(messageAddition + this.addon.getGameEndMessage().getMessage());
+
+            //Send second message
+            if (this.addon.isSecondMessage() && (!casual || this.addon.isSendSecondOnCasual()))
+                this.executorService.schedule(() -> this.minecraft.thePlayer.sendChatMessage(messageAddition + this.addon.getAdditionalMessage().getMessage())
+                        , this.addon.getSecondMessageDelay(), TimeUnit.MILLISECONDS);
+
+            //Waiting for ending
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException exception) {
+                exception.printStackTrace();
+            }
+            this.invokedGG = false;
+        }, this.addon.getMessageDelay(), TimeUnit.MILLISECONDS);
     }
 }

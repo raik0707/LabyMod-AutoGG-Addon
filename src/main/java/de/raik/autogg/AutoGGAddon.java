@@ -87,6 +87,12 @@ public class AutoGGAddon extends LabyModAddon {
     private AdditionalMessage additionalMessage = AdditionalMessage.HEART;
 
     /**
+     * If true the second message will be sent
+     * if a casual gg triggers
+     */
+    private boolean sendSecondOnCasual = true;
+
+    /**
      * ExecutorService for handeling
      */
     private final ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -118,7 +124,7 @@ public class AutoGGAddon extends LabyModAddon {
      * Trigger type to differentiate triggers
      * ArrayList Containing pattern
      */
-    private HashMap<Pattern, HashMap<TriggerType, HashSet<Pattern>>> triggers = new HashMap<>();
+    private final HashMap<Pattern, HashMap<TriggerType, HashSet<Pattern>>> triggers = new HashMap<>();
 
     /**
      * AntiGG and AntiKarma triggers
@@ -127,12 +133,12 @@ public class AutoGGAddon extends LabyModAddon {
      * HashMap containing the pattern
      * depending on trigger type
      */
-    private HashMap<Pattern, HashMap<TriggerType, Pattern>> antiTriggers = new HashMap<>();
+    private final HashMap<Pattern, HashMap<TriggerType, Pattern>> antiTriggers = new HashMap<>();
 
     /**
      * Containing the string to add before the message on the different servers.
      */
-    private HashMap<Pattern, String> messageAdditions = new HashMap<>();
+    private final HashMap<Pattern, String> messageAdditions = new HashMap<>();
 
     /**
      * The pattern of the current server
@@ -167,6 +173,7 @@ public class AutoGGAddon extends LabyModAddon {
 
         JsonObject secondMessageOptions = addonConfig.getAsJsonObject("secondmessagesettings");
         this.secondMessageDelay = secondMessageOptions.has("messagedelay") ? secondMessageOptions.get("messagedelay").getAsInt() : this.secondMessageDelay;
+        this.sendSecondOnCasual = secondMessageOptions.has("sendcasual") ? secondMessageOptions.get("sendcasual").getAsBoolean() : this.sendSecondOnCasual;
         //Try catch to check the enum again
         try {
             this.additionalMessage = secondMessageOptions.has("message") ?
@@ -236,6 +243,8 @@ public class AutoGGAddon extends LabyModAddon {
         JsonObject config = this.getConfig().getAsJsonObject("secondmessagesettings");
         subSettings.add(new MessageDelayElement(this, config, this.secondMessageDelay));
         subSettings.add(new MessageDropdownElement<>(this, config, AdditionalMessage.createDropDownMenu(this.additionalMessage)));
+        subSettings.add(new DescribedBooleanElement("Send on Casual", this, new ControlElement.IconData(Material.MAP)
+                , "sendcasual", this.sendSecondOnCasual, "Send the second message also on casual triggers"));
     }
 
     /**
@@ -366,16 +375,28 @@ public class AutoGGAddon extends LabyModAddon {
         return this.casualAutoGG;
     }
 
-    public boolean isAntiGG() {
-        return this.antiGG;
-    }
-
-    public boolean isAntiKarma() {
-        return this.antiKarma;
-    }
-
     public boolean isSecondMessage() {
         return this.secondMessage;
+    }
+
+    public int getMessageDelay() {
+        return this.messageDelay;
+    }
+
+    public int getSecondMessageDelay() {
+        return this.secondMessageDelay;
+    }
+
+    public GameEndMessage getGameEndMessage() {
+        return this.gameEndMessage;
+    }
+
+    public AdditionalMessage getAdditionalMessage() {
+        return this.additionalMessage;
+    }
+
+    public boolean isSendSecondOnCasual() {
+        return this.sendSecondOnCasual;
     }
 
     /**
@@ -429,6 +450,30 @@ public class AutoGGAddon extends LabyModAddon {
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Check if a message matches a gg trigger
+     *
+     * @param message The message to check
+     * @return The result
+     */
+    public boolean match(String message) {
+        for (Pattern pattern: this.triggers.get(this.currentServerPattern).get(TriggerType.NORMAL)) {
+            if (pattern.matcher(message).matches())
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the additional message
+     * for the gg message
+     *
+     * @return The message
+     */
+    public String getMessageAddition() {
+        return this.messageAdditions.get(this.currentServerPattern);
     }
 
     /**
