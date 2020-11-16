@@ -4,7 +4,7 @@
     "mainClass": "de.raik.autogg.AutoGGAddon",
     "description": "Addon automatically says a selected phrase at the end of the game on certain servers (Hypixel for instance). Ported from Sk1er's AutoGG",
     "version": 1,
-    "author": "MineFlash07 (& Sk1er)",
+    "author": "Sk1er LLC",
     "category": 2,
     "icon": "https://mineflash07.github.io/images/addons/autogg.png"
 }

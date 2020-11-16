@@ -15,7 +15,7 @@ Uses the regex file of this mod with the permission of [Sk1er](https://github.co
 3. Go to `LabyMod Settings`
 4. Go to `Addons`
 5. Search "AutoGG"
-6. Press the download button of the AutoGG addon with "MineFlash07 (& Sk1er)" as authors
+6. Press the download button of the AutoGG addon with "Sk1er LLC" as author
 
 **Downloading the file**
 
