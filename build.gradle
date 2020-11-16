@@ -14,7 +14,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "1.0"
+version = project.hasProperty("version") ? project.getProperty("version") : "HEAD-SNAPSHOT"
 group= "de.raik.autogg" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "AutoGG"
 compileJava.options.encoding = "UTF-8"
