@@ -56,10 +56,13 @@ public class AutoGGTriggerListener implements MessageReceiveEvent {
      */
     @Override
     public boolean onReceive(String formattedText, String unformattedText) {
+        if (this.addon.canNotMatch())
+            return false;
+
         if (this.addon.matchAnti(unformattedText, AutoGGAddon.TriggerType.ANTI_KARMA))
             return true;
 
-        if (this.invokedGG && this.addon.matchAnti(unformattedText, AutoGGAddon.TriggerType.ANTI_GG))
+        if (this.addon.matchAnti(unformattedText, AutoGGAddon.TriggerType.ANTI_GG))
             return true;
 
         //Cancelling if running to prevent overlapping

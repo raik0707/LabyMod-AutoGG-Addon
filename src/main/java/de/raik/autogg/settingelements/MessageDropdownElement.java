@@ -37,7 +37,7 @@ public class MessageDropdownElement<T extends Enum<T>> extends DropDownElement<T
         this.setDescriptionText(DESCRIPTION);
 
         //Setting config save callback
-        this.setCallback(value -> {
+        this.setChangeListener(value -> {
             configElement.addProperty(ATTRIBUTE_NAME, value.name());
             addon.saveConfig();
             addon.loadConfig();

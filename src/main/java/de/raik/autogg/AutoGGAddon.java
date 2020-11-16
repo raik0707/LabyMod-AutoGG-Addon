@@ -309,7 +309,7 @@ public class AutoGGAddon extends LabyModAddon {
      * @return The formatted string
      */
     private String reformatAntiString(String stringToReformat) {
-        return stringToReformat.substring(1, stringToReformat.length() - 1).replace("\\\\{2}", "\\\\");
+        return stringToReformat.substring(1, stringToReformat.length() - 1).replaceAll("\\\\{2}", "\\\\");
     }
 
     /**
@@ -328,7 +328,10 @@ public class AutoGGAddon extends LabyModAddon {
             messages.add(additionalTrigger.getMessage());
         }
 
-        return (String[]) messages.toArray();
+        String[] result = new String[messages.size()];
+        messages.toArray(result);
+
+        return result;
     }
 
     /**
@@ -434,8 +437,38 @@ public class AutoGGAddon extends LabyModAddon {
      * @return The result
      */
     public boolean matchAnti(String message, TriggerType antiType) {
-        return (antiType == TriggerType.ANTI_KARMA ? this.antiKarma : this.antiGG)
-                && this.antiTriggers.get(this.currentServerPattern).get(antiType).matcher(message).matches();
+        boolean matchPattern = this.antiTriggers.get(this.currentServerPattern).get(antiType).matcher(message).matches();
+
+        if (antiType == TriggerType.ANTI_KARMA)
+            return this.antiKarma && matchPattern;
+
+        if (!antiGG)
+            return false;
+
+        //Normally returns false when others send those messages
+        //Reason for this construct
+        if (matchPattern)
+            return true;
+
+        String[] messageSplits = message.split(" ");
+
+        for (String antiTrigger: this.getAntiTriggers()) {
+            for (String messageSplit: messageSplits) {
+                if (messageSplit.equalsIgnoreCase(antiTrigger))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a messages validation is possible
+     *
+     * @return The result
+     */
+    public boolean canNotMatch() {
+        return this.currentServerPattern == null;
     }
 
     /**
