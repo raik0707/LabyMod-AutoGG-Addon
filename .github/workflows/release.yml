@@ -31,7 +31,7 @@ jobs:
           release_name: ${{ github.ref }}
           draft: true
 
-      - name: artifact_tag
+      - name: Artifact version
         id: tag_reformat
         run: echo "::set-output name=artifact-version::$(cut -d'v' -f2- <<< '$cut -d'/' -f3- <<< '${{ github.ref }}'' | tr '[:lower:]' '[:upper:]')"
 
@@ -41,7 +41,7 @@ jobs:
       - name: Get Binary name
         id: get_binary_name
         run: |
-          file_name="$(ls ./build/libs/*-${{ needs.reformat_artifact_tag.outputs.artifact-version }}.jar | head -1 | cut -d'/' -f4-)"
+          file_name="$(ls ./build/libs/*-${{ steps.tag_reformat.outputs.artifact-version }}.jar | head -1 | cut -d'/' -f4-)"
           echo "::set-output name=binary_name::$file_name"
           echo "::set-output name=reformatted_name::$(tr ' ' '-' <<< $file_name)"
 
