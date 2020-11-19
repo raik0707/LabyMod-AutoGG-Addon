@@ -8,7 +8,7 @@ Uses the regex file of this mod with the permission of [Sk1er](https://github.co
 - Download [LabyMod](https://www.labymod.net/download)
 
 ## Download
-**Using LabyMod Addon-Store *(soon)***
+**Using LabyMod Addon-Store**
 
 1. Start LabyMod
 2. Go to `Options`
