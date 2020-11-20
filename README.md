@@ -19,7 +19,7 @@ Uses the regex file of this mod with the permission of [Sk1er](https://github.co
 
 **Downloading the file**
 
-1. Download the addon jar file of the [latest release](https://github.com/MineFlash07/LabyMod-AutoGG-Addon/releases/latest)
+1. Download the addon jar file from [releases](https://github.com/MineFlash07/LabyMod-AutoGG-Addon/releases/). 1.12.2 files will end with 1.12.2.
 2. Open your .minecraft directory
 3. Go into `LabyMod`
 4. Go into `addons-1.8` or `addons-1.12` (Depending on the minecraft version you want the addon to use for)
