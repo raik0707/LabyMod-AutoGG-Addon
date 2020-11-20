@@ -83,7 +83,7 @@ public class ButtonElement extends ControlElement {
         if (this.displayName != null)
             LabyMod.getInstance().getDrawUtils().drawRectangle(x - 1, y, x, maxY, Color.GRAY.getRGB());
 
-        int buttonWidth = this.displayName == null ? maxX - x : this.mc.fontRendererObj.getStringWidth(this.button.displayString) + 20;
+        int buttonWidth = this.displayName == null ? maxX - x : this.mc.fontRenderer.getStringWidth(this.button.displayString) + 20;
 
         this.button.setWidth(buttonWidth);
 

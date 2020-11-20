@@ -90,11 +90,11 @@ public class AutoGGTriggerListener implements MessageReceiveEvent {
         this.executorService.schedule(() -> {
             String messageAddition = this.addon.getMessageAddition();
 
-            this.minecraft.thePlayer.sendChatMessage(messageAddition + this.addon.getGameEndMessage().getMessage());
+            this.minecraft.player.sendChatMessage(messageAddition + this.addon.getGameEndMessage().getMessage());
 
             //Send second message
             if (this.addon.isSecondMessage() && (!casual || this.addon.isSendSecondOnCasual()))
-                this.executorService.schedule(() -> this.minecraft.thePlayer.sendChatMessage(messageAddition + this.addon.getAdditionalMessage().getMessage())
+                this.executorService.schedule(() -> this.minecraft.player.sendChatMessage(messageAddition + this.addon.getAdditionalMessage().getMessage())
                         , this.addon.getSecondMessageDelay(), TimeUnit.MILLISECONDS);
 
             //Waiting for ending
